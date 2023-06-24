@@ -13,6 +13,9 @@ classifiers = [
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
 ]
+dependencies = [
+  'sqlite3 ~= 5.0',
+]
 
 [tool.poetry]
 packages = [
@@ -32,3 +35,28 @@ data_util = "data_util:__main__"
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project.optional-dependencies]
+dev = [
+    "pylint ~=2.14.0",
+    "toml ~=0.10.2",
+    "yapf ~=0.32.0",
+]
+test = [
+    "pytest-cov ~=3.0.0",
+]
+
+[tool.pytest.ini_options]
+addopts = "--cov --cov-report html --cov-report term-missing --cov-fail-under 95"
+
+[tool.coverage.run]
+source = ["src"]
+
+[tool.poetry.group.test.dependencies]
+coverage = "^7.2.5"
+hypothesis = "^6.75.2"
+pytest = "^7.3.1"
+pytest-cov = "^4.0.0"
+pytest-mock = "^3.10.0"
+pytest-picked = "^0.4.6"
+pytest-sugar = "^0.9.7"
