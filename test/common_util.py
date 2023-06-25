@@ -2,6 +2,7 @@ import os
 import sys
 import logging
 import pathlib
+import data_util.config
 
 class TestUtil:
     DATA_UTIL_TEST_USE_INSTALLED_ENV = "DATA_UTIL_TEST_USE_INSTALLED"
@@ -30,6 +31,23 @@ class TestUtil:
         pass
     pass
 
+def get_home_env():
+    return None if not data_util.config.Configuration.get_home_env() in os.environ else os.environ[data_util.config.Configuration.get_home_env()]
+
+def reset_home_env(value):
+    if value == None:
+       if data_util.config.Configuration.get_home_env() in os.environ:
+            del os.environ[data_util.config.Configuration.get_home_env()]
+            pass
+       pass
+    else:
+        os.environ[data_util.config.Configuration.get_home_env()] = value
+        pass
+    pass
+
+def get_test_home_path():
+    return pathlib.Path(os.getcwd()) / "home_path"
+    
 if TestUtil.instance().should_test_installed():
     import data_util
 else:

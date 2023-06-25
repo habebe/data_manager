@@ -2,6 +2,16 @@ import configparser
 import pathlib
 import os
 import urllib.parse 
+import enum
+import logging 
+
+class LoggingLevel(enum.IntEnum):
+    DEBUG = logging.DEBUG
+    INFO = logging.INFO
+    WARNING = logging.WARNING
+    ERROR = logging.ERROR
+    CRITICAL = logging.CRITICAL
+    pass
 
 class Configuration:
     __instance__ = None
@@ -53,6 +63,9 @@ class Configuration:
         self.__db_path__ = None
         self.__config_file_path__ = None
         self.__cache_path__ = None
+
+        self.__is_setup__ = False
+        self.__config_parser__ = None
         self.__init_home__()
         pass
     
@@ -102,20 +115,37 @@ class Configuration:
             return data_path
         return None
 
+    def is_setup(self):
+        return self.__is_setup__
+
+    def get_config_parser(self):
+        return self.__config_parser__
+
+    def setup(self):
+        if not self.is_setup():
+            self.__setup_paths__()
+            if self.get_config_file_path().exists() == False:
+                self.__create_config_file__()
+                pass
+            self.reload()
+            pass
+        pass
+
     def reload(self):
-        self.config = configparser.ConfigParser()
-        self.config.read(self.__config_file_path__)
+        self.__config_parser__ = configparser.ConfigParser()
+        self.__config_parser__.read(self.get_config_file_path())
         pass
    
     def __setup_paths__(self):
         self.__home__.mkdir(parents=True,exist_ok=True)
         self.__data_path__.mkdir(parents=True,exist_ok=True)
         self.__cache_path__.mkdir(parents=True,exist_ok=True)
+        self.__is_setup__ = True
         pass
 
     def __init_home__(self):
         if self.get_home_env() in os.environ:
-            self.__home__ = os.environ[self.get_home_env()]
+            self.__home__ = pathlib.Path(os.environ[self.get_home_env()])
         else:
             self.__home__ = pathlib.Path.home() / self.get_home_dir()
             pass
@@ -124,13 +154,10 @@ class Configuration:
         self.__cache_path__ = self.__data_path__ / self.get_cache_dir()
         self.__db_path__ = self.__data_path__ / self.get_db_name()
         pass
-    
+
     def __create_paths__(self):
         self.__setup_paths__()
-        if self.__config_file_path__.exists() == False:
-            self.__create_config_file__()
-            pass
-        self.reload()
+        
         pass
 
     def __create_config_file__(self):

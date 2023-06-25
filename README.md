@@ -3,11 +3,12 @@ Various Data, Datasets and Caches uitilities
 
 From Root Directory
 
-To build:
+## To build:
  python -m build
 
-To run tests:
- pytest 
+## To run tests:
+ python -m unittest discover -v 
 
-To install 
+## To install 
  pip install .
+

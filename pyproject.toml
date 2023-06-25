@@ -14,7 +14,8 @@ classifiers = [
     "Operating System :: OS Independent",
 ]
 dependencies = [
-  'sqlite3 ~= 5.0',
+    "pandas >= 1.4.4",
+    "tabulate >= 0.8.10"
 ]
 
 [tool.poetry]
@@ -30,7 +31,7 @@ package-data = {"data_util" = ["data_files/*.json"]}
 where = ["src"]
 
 [project.scripts]  # Optional
-data_util = "data_util:__main__"
+data_util = "data_util:__main__.main"
 
 [build-system]
 requires = ["setuptools>=43.0.0", "wheel"]

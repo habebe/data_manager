@@ -8,12 +8,98 @@ import datetime
 import numpy as np
 from zlib import crc32
 import shutil 
-import sys
+import logging
+import hashlib
 
-from . import database
+from . import db
 from . import config
 
-class dataset:
+class Dataset:
+    def __init__(self):
+        self.meta_data = None
+        self.data = {}
+        pass
+    pass
+
+class Util:
+    @classmethod
+    def file_hash(self,filename):
+        path = pathlib.Path(filename)
+        sha256_hash = None
+        if path.is_file():
+            sha256_hash = hashlib.sha256()
+            with open(filename,"rb") as f:
+                for byte_block in iter(lambda: f.read(4096),b""):
+                    sha256_hash.update(byte_block)
+                    pass
+                pass
+            sha256_hash = sha256_hash.hexdigest()
+            pass
+        return sha256_hash
+    pass
+
+class Loader:
+    __instance__ = None
+    
+    @classmethod
+    def instance(self,reload=False):
+        if self.__instance__ == None or reload == True:
+            self.__instance__ = Loader()
+            pass
+        return self.__instance__ 
+
+    def __init__(self):
+        pass
+
+    def load_url(self,source,refresh=False):
+        logging.debug(f"load_url source:{source} refresh:{refresh}")
+        database = db.Database.instance()
+        configuration = config.Configuration.instance()
+        ds = None
+        if source != None:
+            ds = Dataset()
+            ds.meta_data = database.select(source=source,unique=True)
+            
+            cache_path = configuration.get_cache_path(source)
+            file_hash = Util.file_hash(cache_path)
+
+            should_retrieve = (cache_path.is_file() == False) or (refresh == True) or (ds.meta_data == None) or (file_hash == None)
+            logging.debug(f"\tload_url should_retrieve:{should_retrieve}")
+            logging.debug(f"\tload_url cache_path:{cache_path}")
+            logging.debug(f"\tload_url file_hash:{file_hash}")
+            logging.debug(f"\tload_url ds.meta_data :{ds.meta_data }")
+            if should_retrieve:
+                cache_path = self.retrieve_file(source)
+                timestamp = datetime.datetime.now()
+                file_hash = Util.file_hash(cache_path)
+                if ds.meta_data == None:
+                    id = database.insert(source,None,cache_path,file_hash,timestamp)
+                    ds.meta_data = database.select(id=id,unique=True)
+                else:
+                    database.update(ds.meta_data.id,source,None,cache_path,file_hash,timestamp)
+                    ds.meta_data = database.select(id=ds.meta_data.id,unique=True)
+                logging.debug(f"\t\tload_url ds.meta_data :{ds.meta_data }")
+                pass
+        print(ds.meta_data)
+        return ds
+
+    def retrieve_file(self,source,destination = None):
+        retrieved_file = None
+        try:
+            logging.debug(f"retrieve_file source:{source}")
+            (retrieved_file,response) = urllib.request.urlretrieve(source)
+            if retrieved_file != None:
+                retrieved_file = pathlib.Path(retrieved_file)
+                if destination == None:
+                    destination = config.Configuration.instance().setup_cache_path(source)
+                shutil.move(str(retrieved_file),str(destination))
+                retrieved_file = destination
+                logging.debug(f"retrieve_file destination:{destination}")
+        except Exception as e:
+            print(f"[exception] retrieve_file: {e}")
+        return retrieved_file
+    
+class __dataset:
     def __init__(self):
         self.data_descriptions = {}
         self.data = {}
@@ -52,9 +138,9 @@ class dataset:
         return None
         
 
-class loader:
+class __loader:
     def __init__(self):
-        self.db = database.db.instance()
+        self.db = db.db.instance()
         self.data_description = None
         self.children_descriptions = None
         self.dataset = None
