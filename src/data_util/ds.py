@@ -42,7 +42,7 @@ class Dataset:
         self.__data__[name] = value
         pass
 
-    def to_panda(self,name):
+    def to_df(self,name):
         result = None
         if name in self.__data__:
             if self.__data__[name] == None:
@@ -135,7 +135,35 @@ class ExtractFiles:
     pass
 
 
+class CSVToHDF:
+    def __call__(self,dataset,file_paths):
+        if file_paths != None:
+            store = pd.HDFStore(dataset.hdf_path())
+            for file_path in file_paths:
+                if file_path.suffix.lower() == ".csv":
+                    name,suffix = file_path.name,file_path.suffix
+                    variable_name = name[:-len(suffix)].replace("-","_")
+                    data_frame = pd.read_csv(file_path)
+                    store.put(variable_name,data_frame,format="table")
+                    dataset.set_data(variable_name,None)
+                    pass   
+                pass
+            pass
+        pass
+    pass
 
+class HDFKeys:
+    def __call__(self,dataset):
+        keys = None
+        if dataset != None and dataset.hdf_path() and dataset.hdf_path().is_file():
+            hfd_file = h5py.File(dataset.hdf_path(), 'r')
+            keys = [key for key in hfd_file.keys()]
+            hfd_file.close()
+            pass
+        else:
+            keys = []
+        return keys
+    pass
 
 class Loader:
     __instance__ = None
@@ -159,10 +187,10 @@ class Loader:
         retriever = RetrieveFile()
         tarFileOpener = OpenTarFile()
         extractor = ExtractFiles()
-
+        csv_to_hdf = CSVToHDF()
+        hdf_keys = HDFKeys()
         if source != None:
             cache_path = configuration.get_cache_path(source)
-            
             ds = Dataset()
             ds.set_meta_data(database.select(source=source,unique=True))
             file_hash = hasher(cache_path)
@@ -178,22 +206,18 @@ class Loader:
                     database.update(ds.meta_data().id(),source,None,file_path,file_hash,timestamp)
                     ds.set_meta_data(database.select(id=ds.meta_data().id(),unique=True))
                     pass
-                hdf_path = configuration.get_hdf_path(ds.meta_data().id())
+                ds.set_hdf_path(configuration.get_hdf_path(ds.meta_data().id()))
                 result = tarFileOpener(file_path)
                 result = extractor(result)
-
-                store = pd.HDFStore(hdf_path)
-                ds.set_hdf_path(hdf_path)
-                for i in result:
-                    if i.suffix.lower() == ".csv":
-                        name,suffix = i.name,i.suffix
-                        variable_name = name[:-len(suffix)].replace("-","_")
-                        df = pd.read_csv(i)
-                        store.put(variable_name,df,format="table")
-                        ds.set_data(variable_name,None)
-                        pass
-                    pass 
-                store.flush()
-                store.close()
+                csv_to_hdf(ds,result)
+                pass
+            else:
+                logging.debug("Loading from cache.")
+                ds.set_hdf_path(configuration.get_hdf_path(ds.meta_data().id()))
+                keys = hdf_keys(ds)
+                for key in keys:
+                    ds.set_data(key,None)
+                    pass
+                pass
             pass
         return ds
