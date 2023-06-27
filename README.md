@@ -12,3 +12,15 @@ From Root Directory
 ## To install 
  pip install .
 
+## CLI usage
+
+### Data loading example
+
+##### Getting help
+data_util --help
+
+#### Dump meta data from cached data
+data_util db_dump 
+
+#### Data loading example
+data_util load https://raw.githubusercontent.com/patrickloeber/pytorchTutorial/master/data/wine/wine.csv

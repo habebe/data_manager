@@ -21,6 +21,7 @@ class Configuration:
     __HOME_DIR__ = ".data_util"
     __DATA_DIR__ = "data"
     __CACHE_DIR__ = "cache"
+    __HDF_DIR__ = "hdf"
     
     __CONFIG_FILE_NAME__ = "data_util.ini"
     __DB_NAME__ = "data_util.db"
@@ -50,6 +51,10 @@ class Configuration:
         return self.__CACHE_DIR__
 
     @classmethod
+    def get_hdf_dir(self):
+        return self.__HDF_DIR__
+
+    @classmethod
     def get_config_file_name(self):
         return self.__CONFIG_FILE_NAME__
     
@@ -63,6 +68,7 @@ class Configuration:
         self.__db_path__ = None
         self.__config_file_path__ = None
         self.__cache_path__ = None
+        self.__hdf_path__ = None
 
         self.__is_setup__ = False
         self.__config_parser__ = None
@@ -80,6 +86,14 @@ class Configuration:
     
     def get_config_file_path(self):
         return self.__config_file_path__
+    
+    def get_hdf_path(self,source = None):
+        if source == None:
+            return self.__hdf_path__
+        elif type(source) == int:
+            return self.__hdf_path__ / pathlib.Path(str(source) + ".hdf")
+        else:
+            return self.__hdf_path__ / pathlib.Path(str(source))
 
     def get_cache_path(self,source=None):
         if source == None:
@@ -139,6 +153,7 @@ class Configuration:
     def __setup_paths__(self):
         self.__home__.mkdir(parents=True,exist_ok=True)
         self.__data_path__.mkdir(parents=True,exist_ok=True)
+        self.__hdf_path__.mkdir(parents=True,exist_ok=True)
         self.__cache_path__.mkdir(parents=True,exist_ok=True)
         self.__is_setup__ = True
         pass
@@ -151,6 +166,7 @@ class Configuration:
             pass
         self.__config_file_path__ = self.__home__ / self.get_config_file_name()
         self.__data_path__ = self.__home__ / self.get_data_dir()
+        self.__hdf_path__ = self.__data_path__ / self.get_hdf_dir()
         self.__cache_path__ = self.__data_path__ / self.get_cache_dir()
         self.__db_path__ = self.__data_path__ / self.get_db_name()
         pass

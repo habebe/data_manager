@@ -71,36 +71,41 @@ class DbDump(Command):
     pass
 
 
-class LoadUrl(Command):
+class Load(Command):
     def __init__(self,options):
         Command.__init__(self,options)
         pass
 
     @staticmethod
     def setup_subparser(subparsers):
-        parser = subparsers.add_parser('load_url', help='loads data from given URL')
+        parser = subparsers.add_parser('load', help='loads data from given URL')
+        parser.add_argument("-r", "--refresh", action="store_true", help="Force refresh")
         parser.add_argument("url", help="Data url")
         Command.setup_common_options(parser)
-        parser.set_defaults(func=LoadUrl.create_command)
+        parser.set_defaults(func=Load.create_command)
         pass
 
     @staticmethod
     def create_command(options):
-        return LoadUrl(options)
+        return Load(options)
 
     def setup(self):
         return Command.setup(self)
 
     def run_command(self):
-        dataset = ds.Loader.instance().load_url(self.options.url)
+        dataset = ds.Loader.instance().load(self.options.url,self.options.refresh)
         table = []
         if dataset:
             columns = db.Database.get_columns()
-            mapped_data = dataset.meta_data.to_map()
+            mapped_data = dataset.meta_data().to_map()
             for i in mapped_data:
                 if i in columns:
                     table.append([i,mapped_data[i]])
                     pass
+                pass
+            table.append(["hdf_path",dataset.hdf_path()])
+            for i in dataset.data():
+                table.append([f"data.{i}","None" if type(dataset.data()[i]) == type(None) else "X"])
                 pass
             pass
         print(tabulate(table, tablefmt='fancy_grid'))
@@ -110,7 +115,7 @@ class LoadUrl(Command):
 class CLI:
     __commands__ = [
         DbDump,
-        LoadUrl
+        Load
     ]
 
     def __init__(self,args):

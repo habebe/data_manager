@@ -7,28 +7,44 @@ from . import config
 
 class MetaData:
     def __init__(self,row):
-        self.row = row
-        self.id = row[0]
-        self.source = row[1]
-        self.parent = row[2]
-        self.path = pathlib.Path(row[3])
-        self.hash = row[4]
-        self.timestamp = row[5]
+        self.__id__ = row[0]
+        self.__source__ = row[1]
+        self.__parent__ = row[2]
+        self.__path__ = pathlib.Path(row[3])
+        self.__hash__ = row[4]
+        self.__timestamp__ = row[5]
         pass
     
+    def id(self):
+        return self.__id__
+    
+    def source(self):
+        return self.__source__
+    
+    def parent(self):
+        return self.__parent__
+    
+    def path(self):
+        return self.__path__
+
+    def hash(self):
+        return self.__hash__
+    
+    def timestamp(self):
+        return self.__timestamp__
     
     def to_map(self):
         return {
-            f"{Database.column_id}":self.id,
-            f"{Database.column_source}":self.source,
-            f"{Database.column_parent}":self.parent,  
-            f"{Database.column_path}":str(self.path),
-            f"{Database.column_hash}":str(self.hash),
-            f"{Database.column_timestamp}":self.timestamp
+            f"{Database.column_id}":self.id(),
+            f"{Database.column_source}":self.source(),
+            f"{Database.column_parent}":self.parent(),
+            f"{Database.column_path}":str(self.path()),
+            f"{Database.column_hash}":str(self.hash()),
+            f"{Database.column_timestamp}":self.timestamp()
         }
 
     def to_list(self):
-        return [self.id,self.source,self.parent,self.path,self.hash,self.timestamp]
+        return [self.__id__,self.__source__,self.__path__,self.__hash__,self.__timestamp__]
 
     def to_json(self):
         return json.dumps(self.to_map())
