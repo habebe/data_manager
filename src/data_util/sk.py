@@ -17,7 +17,6 @@ def patch():
     """patch some classes which did not handle get_feature_names_out()
        correctly in Scikit-Learn 1.0.*."""
 
-
     default_get_feature_names_out = StandardScaler.get_feature_names_out
 
     if not hasattr(SimpleImputer, "get_feature_names_out"):
@@ -115,7 +114,6 @@ class Model:
     def set(self,**kwargs):
         for key, value in kwargs.items():
             if key in self.__parameters__:
-                print(f"{key} {value} , {type(value)}")
                 if key == Model.PARAM_TEST_SIZE:
                     v = min(max(0.0,value),1.0)
                     self.__parameters__[key] = v
@@ -168,9 +166,6 @@ class Model:
             test_data.drop(Model.STRATIFY_VARIABLE_NAME,axis=1,inplace=True)
             self.__data__[DataKey.Train] = train_data
             self.__data__[DataKey.Test] = test_data
-            
-            train_data.info()
-            test_data.info()
             pass
         else:
             self.__train_data__,self.__test_data__ = train_test_split(
