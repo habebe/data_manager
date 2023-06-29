@@ -7,6 +7,8 @@ Copyright (C) 2023 Henock Abebe. All rights reserved.
 from . import config
 from . import db
 from . import ds
+from . import df
+from . import sk
 
 VERSION = {
     'major': 0,
@@ -27,6 +29,14 @@ def db_dump():
     return db().select()
 
 
+def load(url,refresh=False,name=None):
+    loader = ds.Loader.instance()
+    dataset = loader.load(url,refresh=refresh)
+    if name != None:
+        return dataset.to_df(name)
+    return dataset
+
+sk.patch()
 __version__ = get_version_string()
 
 
